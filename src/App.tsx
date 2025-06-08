@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Character } from './types/types';
-import { characters } from './data/characters';
+import { characters as defaultCharacters } from './data/characters';
 import Home from './pages/Home';
 import CharacterPage from './pages/CharacterPage';
 
@@ -18,8 +18,24 @@ const darkTheme = createTheme({
   },
 });
 
+const STORAGE_KEY = 'bbrr-characters';
+
 function App() {
-  const [characterData, setCharacterData] = useState<Character[]>(characters);
+  const [characterData, setCharacterData] = useState<Character[]>(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return defaultCharacters;
+      }
+    }
+    return defaultCharacters;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(characterData));
+  }, [characterData]);
 
   const handleUpdateCharacter = (updatedCharacter: Character) => {
     setCharacterData((prev) =>

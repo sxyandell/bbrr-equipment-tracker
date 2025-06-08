@@ -4,21 +4,50 @@ import {
   Typography,
   Box,
   Paper,
-  Grid,
   Button,
   LinearProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import type { Character } from '../types/types';
+import AddIcon from '@mui/icons-material/Add';
+import AddEquipmentDialog from '../components/AddEquipmentDialog';
+import { useState } from 'react';
+import type { Character, Equipment, EquipmentType, EquipmentLevel } from '../types/types';
 
 interface CharacterPageProps {
   characters: Character[];
   onUpdateCharacter: (updatedCharacter: Character) => void;
 }
 
+const EQUIPMENT_TYPES: EquipmentType[] = [
+  'weapon',
+  'helmet',
+  'garment',
+  'gloves',
+  'leggings',
+  'necklace',
+];
+const EQUIPMENT_LEVELS: EquipmentLevel[] = [70, 65, 60, 55, 50, 45];
+
+const UPGRADE_REQUIREMENTS: Record<number, Record<number, number>> = {
+  70: { 65: 1, 60: 1, 55: 1, 50: 1, 45: 1, 40: 1 },
+  65: { 60: 1, 55: 2, 50: 3, 45: 3, 40: 3 },
+  60: { 55: 1, 50: 2, 45: 3, 40: 6 },
+  55: { 50: 1, 45: 2, 40: 3 },
+  50: { 45: 1, 40: 2 },
+  45: { 40: 1 },
+};
+
 export default function CharacterPage({ characters, onUpdateCharacter }: CharacterPageProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const character = characters.find((c) => c.id === id);
 
   if (!character) {
@@ -29,64 +58,243 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
     );
   }
 
+  const handleAddEquipment = (newEquipment: Equipment) => {
+    const updatedCharacter = {
+      ...character,
+      equipment: [...character.equipment, newEquipment],
+    };
+    onUpdateCharacter(updatedCharacter);
+  };
+
+  const handleUpgrade = (equipmentId: string) => {
+    const updatedEquipment = character.equipment.map((item) => {
+      if (item.id === equipmentId) {
+        const newLevel = item.level + 1;
+        const newUpgradeLevel = item.upgradeLevel + 1;
+        const newRefineLevel = item.refineLevel + 1;
+        
+        // Calculate new upgrade requirements
+        const newCurrentMore = Math.max(0, newLevel - item.have);
+        const newTotalNeeded = Math.max(0, item.maxLevel - item.have);
+        
+        return {
+          ...item,
+          level: newLevel,
+          upgradeLevel: newUpgradeLevel,
+          refineLevel: newRefineLevel,
+          currentMore: newCurrentMore,
+          totalNeeded: newTotalNeeded,
+        };
+      }
+      return item;
+    });
+
+    const updatedCharacter = {
+      ...character,
+      equipment: updatedEquipment,
+    };
+    onUpdateCharacter(updatedCharacter);
+  };
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Button
-        startIcon={<ArrowBackIcon />}
-        onClick={() => navigate('/')}
-        sx={{ mb: 3 }}
-      >
-        Back to Characters
-      </Button>
-
-      <Typography variant="h4" component="h1" gutterBottom>
-        {character.name}
-      </Typography>
-
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Equipment Level
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <Box sx={{ flexGrow: 1, mr: 1 }}>
-            <LinearProgress
-              variant="determinate"
-              value={(character.equipmentLevel / character.maxEquipmentLevel) * 100}
-            />
-          </Box>
-          <Typography variant="body2">
-            {character.equipmentLevel}/{character.maxEquipmentLevel}
+    <Box sx={{ width: '100vw', height: '100vh', p: 0, m: 0, overflow: 'hidden', bgcolor: 'background.default' }}>
+      <Box sx={{ width: '100vw', display: 'flex', flexDirection: 'column', height: '100vh', p: 0, m: 0 }}>
+        <Box sx={{ flexShrink: 0, p: 1, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center' }}>
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate('/')}
+            sx={{ mr: 2 }}
+          >
+            Back to Characters
+          </Button>
+          <Typography variant="h5" component="h1" sx={{ flexGrow: 1, textAlign: 'center', m: 0 }}>
+            {character.name} - Inventory Management
           </Typography>
         </Box>
-      </Paper>
-
-      <Typography variant="h5" gutterBottom>
-        Equipment
-      </Typography>
-      <Grid container spacing={2}>
-        {character.equipment.map((item) => (
-          <Grid item xs={12} sm={6} md={4} key={item.id}>
-            <Paper sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                {item.name}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Level: {item.level}/{item.maxLevel}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Upgrade: {item.upgradeLevel}/{item.maxUpgradeLevel}
-              </Typography>
-              <Typography
-                variant="body2"
-                color={item.isOwned ? 'success.main' : 'error.main'}
-                sx={{ mt: 1 }}
-              >
-                {item.isOwned ? 'Owned' : 'Not Owned'}
-              </Typography>
-            </Paper>
-          </Grid>
-        ))}
-      </Grid>
-    </Container>
+        <Box sx={{ flexGrow: 1, width: '100vw', height: '100%', overflow: 'auto', p: 0, m: 0 }}>
+          <TableContainer component={Paper} sx={{ width: '100vw', maxWidth: '100vw', height: '100%', m: 0, p: 0, borderRadius: 0 }}>
+            <Table size="small" sx={{ minWidth: 1200, tableLayout: 'fixed', fontSize: '0.9rem' }}>
+              <TableHead>
+                <TableRow sx={{ backgroundColor: 'action.hover' }}>
+                  <TableCell sx={{ fontSize: '1rem', py: 1, minWidth: 80 }}></TableCell>
+                  {EQUIPMENT_TYPES.map((type) => (
+                    <TableCell key={type} align="center" colSpan={3} sx={{ fontWeight: 'bold', fontSize: '1rem', py: 1, minWidth: 140 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                        <Button
+                          size="small"
+                          variant="contained"
+                          sx={{ fontSize: '0.8rem', py: 0.5, px: 1, minWidth: 0 }}
+                          onClick={() => {
+                            const updatedEquipment = character.equipment.map(item =>
+                              item.type === type
+                                ? {
+                                    ...item,
+                                    level: Math.min(item.level + 1, item.maxLevel),
+                                    upgradeLevel: Math.min(item.upgradeLevel + 1, item.maxUpgradeLevel),
+                                    refineLevel: Math.min(item.refineLevel + 1, item.maxRefineLevel),
+                                  }
+                                : item
+                            );
+                            onUpdateCharacter({ ...character, equipment: updatedEquipment });
+                          }}
+                        >
+                          Upgrade
+                        </Button>
+                      </Box>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {/* Equipped lv row */}
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold', fontSize: '0.95rem', py: 1, minWidth: 80 }}>equipped lv</TableCell>
+                  {EQUIPMENT_TYPES.map((type) => {
+                    const eq = character.equipment.find(e => e.type === type);
+                    return [
+                      <TableCell key={type + '-eq-lv'} align="center" colSpan={3} sx={{ py: 1, minWidth: 140 }}>
+                        <select
+                          value={eq ? eq.level : ''}
+                          style={{ width: 60, textAlign: 'center', fontSize: '0.95rem', padding: '3px' }}
+                          onChange={e => {
+                            if (!eq) return;
+                            const newLevel = Number(e.target.value);
+                            const updatedEquipment = character.equipment.map(item =>
+                              item.type === type ? { ...item, level: newLevel } : item
+                            );
+                            onUpdateCharacter({ ...character, equipment: updatedEquipment });
+                          }}
+                        >
+                          {[...Array(6)].map((_, i) => {
+                            const val = 70 - i * 5;
+                            return <option key={val} value={val}>{val}</option>;
+                          })}
+                        </select>
+                      </TableCell>
+                    ];
+                  })}
+                </TableRow>
+                {/* Enhance lv row */}
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold', fontSize: '0.95rem', py: 1, minWidth: 80 }}>enhance lv</TableCell>
+                  {EQUIPMENT_TYPES.map((type) => {
+                    const eq = character.equipment.find(e => e.type === type);
+                    return [
+                      <TableCell key={type + '-eq-enh'} align="center" colSpan={3} sx={{ py: 1, minWidth: 140 }}>
+                        <select
+                          value={eq ? eq.upgradeLevel : ''}
+                          style={{ width: 60, textAlign: 'center', fontSize: '0.95rem', padding: '3px' }}
+                          onChange={e => {
+                            if (!eq) return;
+                            const newEnh = Number(e.target.value);
+                            const updatedEquipment = character.equipment.map(item =>
+                              item.type === type ? { ...item, upgradeLevel: newEnh } : item
+                            );
+                            onUpdateCharacter({ ...character, equipment: updatedEquipment });
+                          }}
+                        >
+                          {[...Array(6)].map((_, i) => {
+                            const val = 70 - i * 5;
+                            return <option key={val} value={val}>{val}</option>;
+                          })}
+                        </select>
+                      </TableCell>
+                    ];
+                  })}
+                </TableRow>
+                {/* Refine lv row */}
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold', fontSize: '0.95rem', py: 1, minWidth: 80 }}>refine lv</TableCell>
+                  {EQUIPMENT_TYPES.map((type) => {
+                    const eq = character.equipment.find(e => e.type === type);
+                    return [
+                      <TableCell key={type + '-eq-ref'} align="center" colSpan={3} sx={{ py: 1, minWidth: 140 }}>
+                        <select
+                          value={eq ? eq.refineLevel : ''}
+                          style={{ width: 60, textAlign: 'center', fontSize: '0.95rem', padding: '3px' }}
+                          onChange={e => {
+                            if (!eq) return;
+                            const newRef = Number(e.target.value);
+                            const updatedEquipment = character.equipment.map(item =>
+                              item.type === type ? { ...item, refineLevel: newRef } : item
+                            );
+                            onUpdateCharacter({ ...character, equipment: updatedEquipment });
+                          }}
+                        >
+                          {[...Array(6)].map((_, i) => {
+                            const val = 70 - i * 5;
+                            return <option key={val} value={val}>{val}</option>;
+                          })}
+                        </select>
+                      </TableCell>
+                    ];
+                  })}
+                </TableRow>
+                {/* c more/total/have header row */}
+                <TableRow sx={{ backgroundColor: 'action.selected' }}>
+                  <TableCell sx={{ py: 1, minWidth: 80 }}></TableCell>
+                  {EQUIPMENT_TYPES.map((type) => [
+                    <TableCell key={type + '-t'} align="center" sx={{ fontSize: '0.9rem', py: 1, minWidth: 40 }}>total</TableCell>,
+                    <TableCell key={type + '-c'} align="center" sx={{ fontSize: '0.9rem', py: 1, minWidth: 40 }}>more</TableCell>,
+                    <TableCell key={type + '-h'} align="center" sx={{ fontSize: '0.9rem', py: 1, minWidth: 40 }}>have</TableCell>,
+                  ])}
+                </TableRow>
+                {/* For each equipment level, show c more, total, have for each type */}
+                {EQUIPMENT_LEVELS.map((level) => (
+                  <TableRow key={'row-' + level} sx={{ py: 0.5 }}>
+                    <TableCell sx={{ fontWeight: 'bold', fontSize: '0.95rem', py: 1, minWidth: 80 }}>{level}</TableCell>
+                    {EQUIPMENT_TYPES.map((type) => {
+                      const have = character.inventory[type][level] || 0;
+                      // Find the equipped item for this type
+                      const eq = character.equipment.find(e => e.type === type);
+                      let more = 0;
+                      if (eq && UPGRADE_REQUIREMENTS[eq.level] && UPGRADE_REQUIREMENTS[eq.level][level]) {
+                        const needed = UPGRADE_REQUIREMENTS[eq.level][level];
+                        more = Math.max(0, needed - have);
+                      }
+                      const total = have + more;
+                      return [
+                        <TableCell key={type + '-' + level + '-t'} align="center" sx={{ fontSize: '0.9rem', py: 1, minWidth: 40 }}>{total}</TableCell>,
+                        <TableCell key={type + '-' + level + '-c'} align="center" sx={{ fontSize: '0.9rem', py: 1, minWidth: 40 }}>{more}</TableCell>,
+                        <TableCell key={type + '-' + level + '-h'} align="center" sx={{ fontSize: '0.9rem', py: 0.5, minWidth: 40 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Box component="span" sx={{ mx: 1 }}>{have}</Box>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => {
+                                const updated = { ...character.inventory };
+                                updated[type][level] = (updated[type][level] || 0) + 1;
+                                onUpdateCharacter({ ...character, inventory: updated });
+                              }}
+                              sx={{ minWidth: 0, px: 1, fontSize: '0.9rem', ml: 0.5 }}
+                            >
+                              +
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => {
+                                const updated = { ...character.inventory };
+                                updated[type][level] = Math.max(0, updated[type][level] - 1);
+                                onUpdateCharacter({ ...character, inventory: updated });
+                              }}
+                              sx={{ minWidth: 0, px: 1, fontSize: '0.9rem', ml: 0.5 }}
+                            >
+                              -
+                            </Button>
+                          </Box>
+                        </TableCell>
+                      ];
+                    })}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      </Box>
+    </Box>
   );
 } 
