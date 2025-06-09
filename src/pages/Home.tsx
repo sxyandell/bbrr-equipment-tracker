@@ -43,6 +43,9 @@ export default function Home({ characters }: HomeProps) {
               <Typography variant="h6" gutterBottom align="center" sx={{ color: customColors.periwinkle[100], fontWeight: 600 }}>
                 {character.name}
               </Typography>
+              <Typography variant="body2" align="center" sx={{ color: localStorage.getItem(`bbrr-upToDate-${character.id}`) === 'true' ? '#00FFB3' : 'orange', fontWeight: 500, mb: 1 }}>
+                {localStorage.getItem(`bbrr-upToDate-${character.id}`) === 'true' ? 'Up to Date' : 'Not Up to Date'}
+              </Typography>
             </Box>
           </Grid>
         ))}

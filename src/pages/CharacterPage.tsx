@@ -200,7 +200,10 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
             control={
               <Checkbox
                 checked={userUpToDate}
-                onChange={(_, checked) => setUserUpToDate(checked)}
+                onChange={(_, checked) => {
+                  setUserUpToDate(checked);
+                  localStorage.setItem(`bbrr-upToDate-${id}`, checked ? 'true' : 'false');
+                }}
                 sx={{
                   color: userUpToDate ? '#00FFB3' : 'grey.500',
                   '&.Mui-checked': {
