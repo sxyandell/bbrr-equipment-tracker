@@ -27,6 +27,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { green, orange } from '@mui/material/colors';
 
+// Restore removed code
 interface CharacterPageProps {
   characters: Character[];
   onUpdateCharacter: (updatedCharacter: Character) => void;
@@ -50,7 +51,6 @@ const UPGRADE_REQUIREMENTS: Record<number, Record<number, number>> = {
   60: { 65: 1, 60: 2, 55: 3 },
   65: { 70: 1, 65: 2, 60: 3 },
 };
-
 
 const TOTAL_REQUIREMENTS: Record<number, Record<number, Record<number, number>>> = {
   70: {
@@ -111,6 +111,11 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
   const character = characters.find((c) => c.id === id);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [userUpToDate, setUserUpToDate] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(`bbrr-upToDate-${id}`);
+    setUserUpToDate(stored === 'true');
+  }, [id]);
 
   if (!character) {
     return (
@@ -371,7 +376,7 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
                     onMouseLeave={() => setHoveredRow(null)}
                   >
                     <TableCell sx={{ fontWeight: 'bold', fontSize: '0.95rem', py: 1, minWidth: 80 }}>{level}</TableCell>
-                    {EQUIPMENT_TYPES.map((type) => {
+                    {EQUIPMENT_TYPES.map((type, colIdx) => {
                       const have = character.inventory[type][level] || 0;
                       const eq = character.equipment.find(e => e.type === type);
                       let more = 0;
@@ -384,10 +389,24 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
                       if (eq && eq.upgradeLevel >= 40 && eq.level >= 45 && TOTAL_REQUIREMENTS[eq.level] && TOTAL_REQUIREMENTS[eq.level][eq.upgradeLevel]) {
                         total = TOTAL_REQUIREMENTS[eq.level][eq.upgradeLevel][level] || 0;
                       }
+                      // Check if this column's 'more' is 0 for all rows
+                      const allMoreZero = EQUIPMENT_LEVELS.every(lvl => {
+                        const eqCol = character.equipment.find(e => e.type === type);
+                        let m = 0;
+                        if (eqCol && UPGRADE_REQUIREMENTS[eqCol.upgradeLevel] && UPGRADE_REQUIREMENTS[eqCol.upgradeLevel][lvl]) {
+                          const needed = UPGRADE_REQUIREMENTS[eqCol.upgradeLevel][lvl];
+                          m = Math.max(0, needed - (character.inventory[type][lvl] || 0));
+                        }
+                        return m === 0;
+                      });
+                      const highlightCol = allMoreZero ? { backgroundColor: 'rgba(0,255,179,0.15)' } : {};
                       return [
-                        <TableCell key={type + '-' + level + '-t'} align="center" sx={{ fontSize: '0.9rem', py: 1, minWidth: 40 }}>{total}</TableCell>,
-                        <TableCell key={type + '-' + level + '-c'} align="center" sx={{ fontSize: '0.9rem', py: 1, minWidth: 40 }}>{more}</TableCell>,
-                        <TableCell key={type + '-' + level + '-h'} align="center" sx={{ fontSize: '0.9rem', py: 0.5, minWidth: 40 }}>
+                        <TableCell key={type + '-' + level + '-t'} align="center" sx={{ fontSize: '0.9rem', py: 1, minWidth: 40, ...highlightCol }}>{total}</TableCell>,
+                        <TableCell key={type + '-' + level + '-c'} align="center" sx={{ fontSize: '0.9rem', py: 1, minWidth: 40, ...highlightCol }}>{more}</TableCell>,
+                        <TableCell key={type + '-' + level + '-h'} align="center" sx={{ fontSize: '0.9rem', py: 0.5, minWidth: 40,
+                          color: have === total ? '#00FFB3' : (have > total ? '#FF9800' : 'inherit'),
+                          fontWeight: have === total || have > total ? 700 : 400
+                        }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Box component="span" sx={{ mx: 1 }}>{have}</Box>
                             <Button
