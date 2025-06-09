@@ -121,34 +121,29 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
     onUpdateCharacter(updatedCharacter);
   };
 
-  const handleUpgrade = (equipmentId: string) => {
-    const updatedEquipment = character.equipment.map((item) => {
-      if (item.id === equipmentId) {
-        const newLevel = item.level + 1;
-        const newUpgradeLevel = item.upgradeLevel + 1;
-        const newRefineLevel = item.refineLevel + 1;
-        
-        // Calculate new upgrade requirements
-        const newCurrentMore = Math.max(0, newLevel - item.have);
-        const newTotalNeeded = Math.max(0, item.maxLevel - item.have);
-        
-        return {
-          ...item,
-          level: newLevel,
-          upgradeLevel: newUpgradeLevel,
-          refineLevel: newRefineLevel,
-          currentMore: newCurrentMore,
-          totalNeeded: newTotalNeeded,
-        };
-      }
-      return item;
+  const handleUpgrade = (equipmentType: EquipmentType) => {
+    const eq = character.equipment.find(e => e.type === equipmentType);
+    if (!eq) return;
+    const currentEnhanceLevel = eq.upgradeLevel;
+    const nextEnhanceLevel = Math.min(currentEnhanceLevel + 5, 70);
+    const requirements = UPGRADE_REQUIREMENTS[currentEnhanceLevel] || {};
+    // Decrease have for each required level
+    const updatedInventory = { ...character.inventory };
+    const typeInventory = { ...updatedInventory[equipmentType] };
+    Object.entries(requirements).forEach(([levelStr, amount]) => {
+      const level = Number(levelStr);
+      typeInventory[level] = Math.max(0, (typeInventory[level] || 0) - amount);
     });
-
-    const updatedCharacter = {
-      ...character,
-      equipment: updatedEquipment,
-    };
-    onUpdateCharacter(updatedCharacter);
+    updatedInventory[equipmentType] = typeInventory;
+    const updatedEquipment = character.equipment.map(item =>
+      item.type === equipmentType
+        ? {
+            ...item,
+            upgradeLevel: nextEnhanceLevel
+          }
+        : item
+    );
+    onUpdateCharacter({ ...character, equipment: [...updatedEquipment], inventory: updatedInventory });
   };
 
   return (
@@ -196,17 +191,28 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
                           variant="contained"
                           sx={{ fontSize: '0.8rem', py: 0.5, px: 1, minWidth: 0 }}
                           onClick={() => {
+                            const eq = character.equipment.find(item => item.type === type);
+                            if (!eq) return;
+                            const currentEnhanceLevel = eq.upgradeLevel;
+                            const nextEnhanceLevel = Math.min(currentEnhanceLevel + 5, 70);
+                            const requirements = UPGRADE_REQUIREMENTS[currentEnhanceLevel] || {};
+                            // Decrease have for each required level
+                            const updatedInventory = { ...character.inventory };
+                            const typeInventory = { ...updatedInventory[type] };
+                            Object.entries(requirements).forEach(([levelStr, amount]) => {
+                              const level = Number(levelStr);
+                              typeInventory[level] = Math.max(0, (typeInventory[level] || 0) - amount);
+                            });
+                            updatedInventory[type] = typeInventory;
                             const updatedEquipment = character.equipment.map(item =>
                               item.type === type
                                 ? {
                                     ...item,
-                                    level: Math.min(item.level + 1, item.maxLevel),
-                                    upgradeLevel: Math.min(item.upgradeLevel + 1, item.maxUpgradeLevel),
-                                    refineLevel: Math.min(item.refineLevel + 1, item.maxRefineLevel),
+                                    upgradeLevel: nextEnhanceLevel
                                   }
                                 : item
                             );
-                            onUpdateCharacter({ ...character, equipment: updatedEquipment });
+                            onUpdateCharacter({ ...character, equipment: [...updatedEquipment], inventory: updatedInventory });
                           }}
                         >
                           Upgrade
@@ -261,7 +267,7 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
                             const updatedEquipment = character.equipment.map(item =>
                               item.type === type ? { ...item, upgradeLevel: newEnh } : item
                             );
-                            onUpdateCharacter({ ...character, equipment: updatedEquipment });
+                            onUpdateCharacter({ ...character, equipment: [...updatedEquipment] });
                           }}
                         >
                           {[...Array(7)].map((_, i) => {
