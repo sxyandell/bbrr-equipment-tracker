@@ -125,7 +125,7 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
     const eq = character.equipment.find(e => e.type === equipmentType);
     if (!eq) return;
     const currentEnhanceLevel = eq.upgradeLevel;
-    const nextEnhanceLevel = Math.min(currentEnhanceLevel + 5, 70);
+    const nextEnhanceLevel = Math.min(currentEnhanceLevel + 5, eq.level);
     const requirements = UPGRADE_REQUIREMENTS[currentEnhanceLevel] || {};
     // Decrease have for each required level
     const updatedInventory = { ...character.inventory };
@@ -194,7 +194,7 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
                             const eq = character.equipment.find(item => item.type === type);
                             if (!eq) return;
                             const currentEnhanceLevel = eq.upgradeLevel;
-                            const nextEnhanceLevel = Math.min(currentEnhanceLevel + 5, 70);
+                            const nextEnhanceLevel = Math.min(currentEnhanceLevel + 5, eq.level);
                             const requirements = UPGRADE_REQUIREMENTS[currentEnhanceLevel] || {};
                             // Decrease have for each required level
                             const updatedInventory = { ...character.inventory };
@@ -214,6 +214,16 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
                             );
                             onUpdateCharacter({ ...character, equipment: [...updatedEquipment], inventory: updatedInventory });
                           }}
+                          disabled={(() => {
+                            const eq = character.equipment.find(item => item.type === type);
+                            if (!eq) return true;
+                            const requirements = UPGRADE_REQUIREMENTS[eq.upgradeLevel] || {};
+                            return Object.entries(requirements).some(([levelStr, amount]) => {
+                              const level = Number(levelStr);
+                              const have = character.inventory[type][level] || 0;
+                              return have < amount;
+                            });
+                          })()}
                         >
                           Upgrade
                         </Button>
@@ -272,6 +282,7 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
                         >
                           {[...Array(7)].map((_, i) => {
                             const val = 70 - i * 5;
+                            if (eq && val > eq.level) return null;
                             return <option key={val} value={val}>{val}</option>;
                           })}
                         </select>
