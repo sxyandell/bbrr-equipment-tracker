@@ -19,8 +19,13 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
 import AddEquipmentDialog from '../components/AddEquipmentDialog';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Character, Equipment, EquipmentType, EquipmentLevel } from '../types/types';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { green, orange } from '@mui/material/colors';
 
 interface CharacterPageProps {
   characters: Character[];
@@ -104,6 +109,8 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
   const navigate = useNavigate();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const character = characters.find((c) => c.id === id);
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const [userUpToDate, setUserUpToDate] = useState(false);
 
   if (!character) {
     return (
@@ -146,6 +153,15 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
     onUpdateCharacter({ ...character, equipment: [...updatedEquipment], inventory: updatedInventory });
   };
 
+  const characterIndex = characters.findIndex((c) => c.id === id);
+  const prevCharacter = characters[(characterIndex - 1 + characters.length) % characters.length];
+  const nextCharacter = characters[(characterIndex + 1) % characters.length];
+
+  // Check if all equipment is up to date
+  const allUpToDate = character.equipment.every(eq =>
+    eq.level === 70 && eq.upgradeLevel === 70 && eq.refineLevel === 8
+  );
+
   return (
     <Box sx={{ width: '100vw', height: '100vh', p: 0, m: 0, overflow: 'hidden', bgcolor: 'background.default' }}>
       <Box sx={{ width: '100vw', display: 'flex', flexDirection: 'column', height: '100vh', p: 0, m: 0 }}>
@@ -159,7 +175,7 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
               Back to Characters
             </Button>
             <Typography variant="h5" component="h1" sx={{ flexGrow: 1, textAlign: 'center', m: 0 }}>
-              {character.name} - Inventory Management
+              {character.name}
             </Typography>
           </Box>
           <FormControlLabel
@@ -173,7 +189,23 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
               />
             }
             label="Have Agent"
-            sx={{ mr: 2 }}
+            sx={{ mr: 1 }}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={userUpToDate}
+                onChange={(_, checked) => setUserUpToDate(checked)}
+                sx={{
+                  color: userUpToDate ? '#00FFB3' : 'grey.500',
+                  '&.Mui-checked': {
+                    color: '#00FFB3',
+                  },
+                }}
+              />
+            }
+            label={<span style={{ color: userUpToDate ? '#00FFB3' : 'grey', fontWeight: 700, fontSize: '1.1rem' }}>Up to Date</span>}
+            sx={{ mr: 1 }}
           />
         </Box>
         <Box sx={{ flexGrow: 1, width: '100vw', height: '100%', overflow: 'auto', p: 0, m: 0 }}>
@@ -327,8 +359,17 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
                   ])}
                 </TableRow>
                 {/* For each equipment level, show c more, total, have for each type */}
-                {EQUIPMENT_LEVELS.map((level) => (
-                  <TableRow key={'row-' + level} sx={{ py: 0.5 }}>
+                {EQUIPMENT_LEVELS.map((level, rowIdx) => (
+                  <TableRow
+                    key={'row-' + level}
+                    sx={{
+                      py: 0.5,
+                      backgroundColor: hoveredRow === rowIdx ? 'action.selected' : undefined,
+                      transition: 'background 0.15s',
+                    }}
+                    onMouseEnter={() => setHoveredRow(rowIdx)}
+                    onMouseLeave={() => setHoveredRow(null)}
+                  >
                     <TableCell sx={{ fontWeight: 'bold', fontSize: '0.95rem', py: 1, minWidth: 80 }}>{level}</TableCell>
                     {EQUIPMENT_TYPES.map((type) => {
                       const have = character.inventory[type][level] || 0;
@@ -383,7 +424,40 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
             </Table>
           </TableContainer>
         </Box>
+        {/* Add floating navigation arrows at the bottom left and right */}
+        <IconButton
+          onClick={() => navigate(`/character/${prevCharacter.id}`)}
+          sx={{
+            position: 'fixed',
+            bottom: 32,
+            left: 32,
+            zIndex: 1300,
+            bgcolor: 'background.paper',
+            boxShadow: 3,
+            '&:hover': { bgcolor: 'primary.main' },
+          }}
+          aria-label="Previous Character"
+          size="large"
+        >
+          <ArrowBackIosNewIcon fontSize="inherit" />
+        </IconButton>
+        <IconButton
+          onClick={() => navigate(`/character/${nextCharacter.id}`)}
+          sx={{
+            position: 'fixed',
+            bottom: 32,
+            right: 32,
+            zIndex: 1300,
+            bgcolor: 'background.paper',
+            boxShadow: 3,
+            '&:hover': { bgcolor: 'primary.main' },
+          }}
+          aria-label="Next Character"
+          size="large"
+        >
+          <ArrowForwardIcon fontSize="inherit" />
+        </IconButton>
       </Box>
     </Box>
   );
-} 
+}
