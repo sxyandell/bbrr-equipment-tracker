@@ -13,6 +13,8 @@ import {
   TableHead,
   TableRow,
   IconButton,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
@@ -36,12 +38,65 @@ const EQUIPMENT_TYPES: EquipmentType[] = [
 const EQUIPMENT_LEVELS: EquipmentLevel[] = [70, 65, 60, 55, 50, 45];
 
 const UPGRADE_REQUIREMENTS: Record<number, Record<number, number>> = {
-  70: { 65: 1, 60: 1, 55: 1, 50: 1, 45: 1, 40: 1 },
-  65: { 60: 1, 55: 2, 50: 3, 45: 3, 40: 3 },
-  60: { 55: 1, 50: 2, 45: 3, 40: 6 },
-  55: { 50: 1, 45: 2, 40: 3 },
-  50: { 45: 1, 40: 2 },
-  45: { 40: 1 },
+  40: { 45: 1 },
+  45: { 50: 1, 45: 2 },
+  50: { 55: 1, 50: 2, 45: 3 },
+  55: { 60: 1, 55: 2, 50: 3 },
+  60: { 65: 1, 60: 2, 55: 3 },
+  65: { 70: 1, 65: 2, 60: 3 },
+};
+
+
+const TOTAL_REQUIREMENTS: Record<number, Record<number, Record<number, number>>> = {
+  70: {
+    40: { 70: 1, 65: 3, 60: 6, 55: 6, 50: 6, 45: 6 },
+    45: { 70: 1, 65: 3, 60: 6, 55: 6, 50: 6, 45: 5 },
+    50: { 70: 1, 65: 3, 60: 6, 55: 6, 50: 5, 45: 3 },
+    55: { 70: 1, 65: 3, 60: 6, 55: 5, 50: 3, 45: 0 },
+    60: { 70: 1, 65: 3, 60: 5, 55: 3, 50: 0, 45: 0 },
+    65: { 70: 1, 65: 2, 60: 3, 55: 0, 50: 0, 45: 0 },
+    70: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 0 },
+  },
+  65: {
+    40: { 70: 0, 65: 1, 60: 3, 55: 6, 50: 6, 45: 6 },
+    45: { 70: 0, 65: 1, 60: 3, 55: 6, 50: 6, 45: 5 },
+    50: { 70: 0, 65: 1, 60: 3, 55: 6, 50: 5, 45: 3 },
+    55: { 70: 0, 65: 1, 60: 3, 55: 5, 50: 3, 45: 0 },
+    60: { 70: 0, 65: 1, 60: 2, 55: 3, 50: 0, 45: 0 },
+    65: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 0 },
+  },
+  60: {
+    40: { 70: 0, 65: 0, 60: 1, 55: 3, 50: 6, 45: 6 },
+    45: { 70: 0, 65: 0, 60: 1, 55: 3, 50: 6, 45: 5 },
+    50: { 70: 0, 65: 0, 60: 1, 55: 3, 50: 5, 45: 3 },
+    55: { 70: 0, 65: 0, 60: 1, 55: 2, 50: 3, 45: 0 },
+    60: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 0 },
+    65: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 0 },
+  },
+  55: {
+    40: { 70: 0, 65: 0, 60: 0, 55: 1, 50: 3, 45: 6 },
+    45: { 70: 0, 65: 0, 60: 0, 55: 1, 50: 3, 45: 5 },
+    50: { 70: 0, 65: 0, 60: 0, 55: 1, 50: 2, 45: 3 },
+    55: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 0 },
+    60: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 0 },
+    65: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 0 },
+  },
+  50: {
+    40: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 1, 45: 3 },
+    45: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 1, 45: 2 },
+    50: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 0 },
+    55: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 0 },
+    60: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 0 },
+    65: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 0 },
+  },
+  45: {
+    40: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 1 },
+    45: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 0 },
+    50: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 0 },
+    55: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 0 },
+    60: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 0 },
+    65: { 70: 0, 65: 0, 60: 0, 55: 0, 50: 0, 45: 0 },
+  },
 };
 
 export default function CharacterPage({ characters, onUpdateCharacter }: CharacterPageProps) {
@@ -99,17 +154,32 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
   return (
     <Box sx={{ width: '100vw', height: '100vh', p: 0, m: 0, overflow: 'hidden', bgcolor: 'background.default' }}>
       <Box sx={{ width: '100vw', display: 'flex', flexDirection: 'column', height: '100vh', p: 0, m: 0 }}>
-        <Box sx={{ flexShrink: 0, p: 1, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center' }}>
-          <Button
-            startIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/')}
+        <Box sx={{ flexShrink: 0, p: 1, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Button
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate('/')}
+              sx={{ mr: 2 }}
+            >
+              Back to Characters
+            </Button>
+            <Typography variant="h5" component="h1" sx={{ flexGrow: 1, textAlign: 'center', m: 0 }}>
+              {character.name} - Inventory Management
+            </Typography>
+          </Box>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={!!character.haveAgent}
+                onChange={(_, checked) => {
+                  onUpdateCharacter({ ...character, haveAgent: checked });
+                }}
+                color="success"
+              />
+            }
+            label="Have Agent"
             sx={{ mr: 2 }}
-          >
-            Back to Characters
-          </Button>
-          <Typography variant="h5" component="h1" sx={{ flexGrow: 1, textAlign: 'center', m: 0 }}>
-            {character.name} - Inventory Management
-          </Typography>
+          />
         </Box>
         <Box sx={{ flexGrow: 1, width: '100vw', height: '100%', overflow: 'auto', p: 0, m: 0 }}>
           <TableContainer component={Paper} sx={{ width: '100vw', maxWidth: '100vw', height: '100%', m: 0, p: 0, borderRadius: 0 }}>
@@ -194,7 +264,7 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
                             onUpdateCharacter({ ...character, equipment: updatedEquipment });
                           }}
                         >
-                          {[...Array(6)].map((_, i) => {
+                          {[...Array(7)].map((_, i) => {
                             const val = 70 - i * 5;
                             return <option key={val} value={val}>{val}</option>;
                           })}
@@ -222,10 +292,9 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
                             onUpdateCharacter({ ...character, equipment: updatedEquipment });
                           }}
                         >
-                          {[...Array(6)].map((_, i) => {
-                            const val = 70 - i * 5;
-                            return <option key={val} value={val}>{val}</option>;
-                          })}
+                          {[...Array(9)].map((_, i) => (
+                            <option key={8 - i} value={8 - i}>{8 - i}</option>
+                          ))}
                         </select>
                       </TableCell>
                     ];
@@ -246,14 +315,17 @@ export default function CharacterPage({ characters, onUpdateCharacter }: Charact
                     <TableCell sx={{ fontWeight: 'bold', fontSize: '0.95rem', py: 1, minWidth: 80 }}>{level}</TableCell>
                     {EQUIPMENT_TYPES.map((type) => {
                       const have = character.inventory[type][level] || 0;
-                      // Find the equipped item for this type
                       const eq = character.equipment.find(e => e.type === type);
                       let more = 0;
-                      if (eq && UPGRADE_REQUIREMENTS[eq.level] && UPGRADE_REQUIREMENTS[eq.level][level]) {
-                        const needed = UPGRADE_REQUIREMENTS[eq.level][level];
+                      if (eq && UPGRADE_REQUIREMENTS[eq.upgradeLevel] && UPGRADE_REQUIREMENTS[eq.upgradeLevel][level]) {
+                        const needed = UPGRADE_REQUIREMENTS[eq.upgradeLevel][level];
                         more = Math.max(0, needed - have);
                       }
-                      const total = have + more;
+                      // Use the 2D lookup table for total
+                      let total = 0;
+                      if (eq && eq.upgradeLevel >= 40 && eq.level >= 45 && TOTAL_REQUIREMENTS[eq.level] && TOTAL_REQUIREMENTS[eq.level][eq.upgradeLevel]) {
+                        total = TOTAL_REQUIREMENTS[eq.level][eq.upgradeLevel][level] || 0;
+                      }
                       return [
                         <TableCell key={type + '-' + level + '-t'} align="center" sx={{ fontSize: '0.9rem', py: 1, minWidth: 40 }}>{total}</TableCell>,
                         <TableCell key={type + '-' + level + '-c'} align="center" sx={{ fontSize: '0.9rem', py: 1, minWidth: 40 }}>{more}</TableCell>,

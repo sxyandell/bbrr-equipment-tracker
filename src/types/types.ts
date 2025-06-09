@@ -31,4 +31,5 @@ export interface Character {
   maxEquipmentLevel: number;
   equipment: Equipment[];
   inventory: EquipmentInventory;
+  haveAgent?: boolean;
 } 
