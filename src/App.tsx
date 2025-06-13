@@ -1,10 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
+import { ThemeProvider, createTheme, CssBaseline, IconButton, Box } from '@mui/material';
 import { useState, useEffect } from 'react';
 import type { Character } from './types/types';
 import { characters as defaultCharacters } from './data/characters';
 import Home from './pages/Home';
 import CharacterPage from './pages/CharacterPage';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 
 // Custom color palette for use throughout the app
 export const customColors = {
@@ -30,6 +32,18 @@ export const customColors = {
   },
 };
 
+const lightTheme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: {
+      main: customColors.periwinkle.main,
+    },
+    secondary: {
+      main: customColors.walnut_brown.main,
+    },
+  },
+});
+
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',
@@ -43,6 +57,7 @@ const darkTheme = createTheme({
 });
 
 const STORAGE_KEY = 'bbrr-characters';
+const THEME_KEY = 'bbrr-theme-mode';
 
 function App() {
   const [characterData, setCharacterData] = useState<Character[]>(() => {
@@ -56,10 +71,17 @@ function App() {
     }
     return defaultCharacters;
   });
+  const [themeMode, setThemeMode] = useState<'light' | 'dark'>(() => {
+    return (localStorage.getItem(THEME_KEY) as 'light' | 'dark') || 'dark';
+  });
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(characterData));
   }, [characterData]);
+
+  useEffect(() => {
+    localStorage.setItem(THEME_KEY, themeMode);
+  }, [themeMode]);
 
   const handleUpdateCharacter = (updatedCharacter: Character) => {
     setCharacterData((prev) =>
@@ -68,8 +90,13 @@ function App() {
   };
 
   return (
-    <ThemeProvider theme={darkTheme}>
+    <ThemeProvider theme={themeMode === 'dark' ? darkTheme : lightTheme}>
       <CssBaseline />
+      <Box sx={{ position: 'fixed', top: 12, right: 16, zIndex: 2000 }}>
+        <IconButton onClick={() => setThemeMode(themeMode === 'dark' ? 'light' : 'dark')} color="inherit">
+          {themeMode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+        </IconButton>
+      </Box>
       <Router>
         <Routes>
           <Route path="/" element={<Home characters={characterData} />} />
