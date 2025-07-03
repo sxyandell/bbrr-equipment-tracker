@@ -1,10 +1,14 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline, IconButton, Box } from '@mui/material';
 import { useState, useEffect } from 'react';
-import type { Character } from './types/types';
+import type { Character, Factor } from './types/types';
 import { characters as defaultCharacters } from './data/characters';
+import { factors as defaultFactors } from './data/factors';
+import { extraFactors as defaultExtraFactors } from './data/extraFactors';
 import Home from './pages/Home';
 import CharacterPage from './pages/CharacterPage';
+import FactorsPage from './pages/FactorsPage';
+import ExtraFactorsPage from './pages/ExtraFactorsPage';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 
@@ -57,6 +61,8 @@ const darkTheme = createTheme({
 });
 
 const STORAGE_KEY = 'bbrr-characters';
+const FACTORS_KEY = 'bbrr-factors';
+const EXTRA_FACTORS_KEY = 'bbrr-extra-factors';
 const THEME_KEY = 'bbrr-theme-mode';
 
 function App() {
@@ -71,6 +77,28 @@ function App() {
     }
     return defaultCharacters;
   });
+  const [factorsData, setFactorsData] = useState<Factor[]>(() => {
+    const stored = localStorage.getItem(FACTORS_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return defaultFactors;
+      }
+    }
+    return defaultFactors;
+  });
+  const [extraFactorsData, setExtraFactorsData] = useState<Factor[]>(() => {
+    const stored = localStorage.getItem(EXTRA_FACTORS_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return defaultExtraFactors;
+      }
+    }
+    return defaultExtraFactors;
+  });
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem(THEME_KEY) as 'light' | 'dark') || 'dark';
   });
@@ -80,6 +108,20 @@ function App() {
   }, [characterData]);
 
   useEffect(() => {
+    localStorage.setItem(FACTORS_KEY, JSON.stringify(factorsData));
+  }, [factorsData]);
+
+  useEffect(() => {
+    localStorage.removeItem(EXTRA_FACTORS_KEY);
+    console.log('Cleared extra factors localStorage, regenerating data...');
+    setExtraFactorsData(defaultExtraFactors);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(EXTRA_FACTORS_KEY, JSON.stringify(extraFactorsData));
+  }, [extraFactorsData]);
+
+  useEffect(() => {
     localStorage.setItem(THEME_KEY, themeMode);
   }, [themeMode]);
 
@@ -87,6 +129,14 @@ function App() {
     setCharacterData((prev) =>
       prev.map((char) => (char.id === updatedCharacter.id ? updatedCharacter : char))
     );
+  };
+
+  const handleUpdateFactors = (updatedFactors: Factor[]) => {
+    setFactorsData(updatedFactors);
+  };
+
+  const handleUpdateExtraFactors = (updatedExtraFactors: Factor[]) => {
+    setExtraFactorsData(updatedExtraFactors);
   };
 
   return (
@@ -106,6 +156,24 @@ function App() {
               <CharacterPage
                 characters={characterData}
                 onUpdateCharacter={handleUpdateCharacter}
+              />
+            }
+          />
+          <Route
+            path="/factors"
+            element={
+              <FactorsPage
+                factors={factorsData}
+                onUpdateFactors={handleUpdateFactors}
+              />
+            }
+          />
+          <Route
+            path="/extra-factors"
+            element={
+              <ExtraFactorsPage
+                extraFactors={extraFactorsData}
+                onUpdateExtraFactors={handleUpdateExtraFactors}
               />
             }
           />

@@ -1,8 +1,9 @@
-import { Grid, Box, Typography } from '@mui/material';
+import { Grid, Box, Typography, Button } from '@mui/material';
 import { Link } from 'react-router-dom';
 import type { Character } from '../types/types';
 import { customColors } from '../App';
 import { grey } from '@mui/material/colors';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 
 interface HomeProps {
   characters: Character[];
@@ -14,6 +15,27 @@ export default function Home({ characters }: HomeProps) {
       <Typography variant="h3" component="h1" gutterBottom align="center" sx={{ color: customColors.walnut_brown.main, fontWeight: 700 }}>
         BlazBlue RR Equipment Tracker
       </Typography>
+      <Box sx={{ mb: 3 }}>
+        <Button
+          component={Link}
+          to="/factors"
+          variant="contained"
+          startIcon={<LocalOfferIcon />}
+          sx={{
+            backgroundColor: customColors.periwinkle.main,
+            color: 'white',
+            '&:hover': {
+              backgroundColor: customColors.periwinkle[600],
+            },
+            px: 3,
+            py: 1.5,
+            fontSize: '1.1rem',
+            fontWeight: 'bold',
+          }}
+        >
+          View Factors
+        </Button>
+      </Box>
       <Grid container spacing={3} justifyContent="center" alignItems="center" sx={{ flex: 1, minHeight: '60vh', width: '100vw' }}>
         {characters.map((character) => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={character.id} sx={{ display: 'flex', justifyContent: 'center' }}>
