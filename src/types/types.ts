@@ -23,6 +23,34 @@ export interface Equipment {
   maxRefineLevel: number;
 }
 
+export type FactorTrait = "Leech" | "DEF" | "STA" | "Burst Period DMG" | "Extra DMG" | "STR" | "Rage Boost" | "Luck Boost";
+export type FactorName = "Vampire" | "Resist" | "Vigour" | "Surge" | "Excess" | "Force" | "Rage" | "Luck";
+
+export interface Factor {
+  id: string;
+  name: FactorName;
+  trait: FactorTrait;
+  level: number;
+  maxLevel: number;
+  quantity: number; // how many of this level you have
+  bonus: number;
+  combinations: Array<{
+    factors: FactorName[];
+    result: string;
+  }>;
+  upgradeConditions: {
+    materials: Array<{
+      id: string;
+      name: string;
+      required: number;
+      owned: number;
+    }>;
+    characterLevel?: number;
+    equipmentLevel?: number;
+    otherFactors?: string[];
+  };
+}
+
 export interface Character {
   id: string;
   name: string;
@@ -32,4 +60,5 @@ export interface Character {
   equipment: Equipment[];
   inventory: EquipmentInventory;
   haveAgent?: boolean;
+  factors?: Factor[];
 } 
