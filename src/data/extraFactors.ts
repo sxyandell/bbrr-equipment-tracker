@@ -88,14 +88,6 @@ const getCombinations = (factorName: FactorName) => {
       { factors: ["Vampire", "Force"], result: "DMG to Mob" },
       { factors: ["Vampire", "Force"], result: "1/5 odds get Def Rage" },
       { factors: ["Vampire", "Resist", "Force"], result: "DMG to Hero" }
-    ],
-    Rage: [
-      { factors: ["Rage", "Luck"], result: "Rage Duration" },
-      { factors: ["Rage", "Luck"], result: "Rage Power" }
-    ],
-    Luck: [
-      { factors: ["Rage", "Luck"], result: "Luck Duration" },
-      { factors: ["Rage", "Luck"], result: "Luck Power" }
     ]
   };
 

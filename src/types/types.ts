@@ -23,8 +23,8 @@ export interface Equipment {
   maxRefineLevel: number;
 }
 
-export type FactorTrait = "Leech" | "DEF" | "STA" | "Burst Period DMG" | "Extra DMG" | "STR" | "Rage Boost" | "Luck Boost";
-export type FactorName = "Vampire" | "Resist" | "Vigour" | "Surge" | "Excess" | "Force" | "Rage" | "Luck";
+export type FactorTrait = "Leech" | "DEF" | "STA" | "Burst Period DMG" | "Extra DMG" | "STR";
+export type FactorName = "Vampire" | "Resist" | "Vigour" | "Surge" | "Excess" | "Force";
 
 export interface Factor {
   id: string;

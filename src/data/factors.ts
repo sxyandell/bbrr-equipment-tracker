@@ -96,6 +96,28 @@ const getCombinations = (factorName: FactorName) => {
 
 export const factors: Factor[] = generateFactors();
 
+// Debug logging to check what's generated
+console.log('Factors generated:', factors.length, 'total factors');
+console.log('Factor types generated:', [...new Set(factors.map(f => f.name))]);
+console.log('Factor traits generated:', [...new Set(factors.map(f => f.trait))]);
+console.log('Levels per factor type:');
+const factorTypeCounts = factors.reduce((acc, factor) => {
+  if (!acc[factor.name]) acc[factor.name] = [];
+  acc[factor.name].push(factor.level);
+  return acc;
+}, {} as Record<string, number[]>);
+Object.entries(factorTypeCounts).forEach(([name, levels]) => {
+  console.log(`${name}: ${levels.length} levels (${Math.min(...levels)}-${Math.max(...levels)})`);
+});
+
+// Verify all 6 factor types are present
+const expectedTypes: FactorName[] = ['Vampire', 'Resist', 'Vigour', 'Surge', 'Excess', 'Force'];
+const actualTypes = [...new Set(factors.map(f => f.name))];
+console.log('Expected factor types:', expectedTypes);
+console.log('Actual factor types:', actualTypes);
+console.log('All expected types present:', expectedTypes.every(type => actualTypes.includes(type)));
+console.log('Missing types:', expectedTypes.filter(type => !actualTypes.includes(type)));
+
 // Factor bonus values for each level (for reference)
 export const factorBonusValues: Record<FactorName, number[]> = {
   Vampire: [10, 20, 40, 70, 120, 200, 300, 520, 780],

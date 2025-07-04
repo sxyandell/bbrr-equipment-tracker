@@ -118,6 +118,12 @@ function App() {
   }, []);
 
   useEffect(() => {
+    localStorage.removeItem(FACTORS_KEY);
+    console.log('Cleared factors localStorage, regenerating data...');
+    setFactorsData(defaultFactors);
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem(EXTRA_FACTORS_KEY, JSON.stringify(extraFactorsData));
   }, [extraFactorsData]);
 
@@ -138,6 +144,12 @@ function App() {
   const handleUpdateExtraFactors = (updatedExtraFactors: Factor[]) => {
     setExtraFactorsData(updatedExtraFactors);
   };
+
+  // Debug logging to check what's being passed
+  console.log('App - factorsData length:', factorsData.length);
+  console.log('App - factorsData types:', [...new Set(factorsData.map(f => f.name))]);
+  console.log('App - defaultFactors length:', defaultFactors.length);
+  console.log('App - defaultFactors types:', [...new Set(defaultFactors.map(f => f.name))]);
 
   return (
     <ThemeProvider theme={themeMode === 'dark' ? darkTheme : lightTheme}>
