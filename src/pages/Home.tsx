@@ -74,9 +74,20 @@ export default function Home({ characters }: HomeProps) {
 
       {activeTab === 0 && (
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center', alignItems: 'center', flex: 1, minHeight: '60vh', width: '100vw' }}>
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(4, 1fr)', 
+            gap: 3, 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            flex: 1, 
+            minHeight: '60vh', 
+            width: '100%',
+            maxWidth: 1200,
+            px: 3
+          }}>
             {characters.map((character) => (
-              <Box key={character.id} sx={{ width: { xs: '100%', sm: 'calc(50% - 12px)', md: 'calc(33.333% - 16px)', lg: 'calc(25% - 18px)' }, display: 'flex', justifyContent: 'center' }}>
+              <Box key={character.id} sx={{ display: 'flex', justifyContent: 'center' }}>
                 <Box
                   component={Link}
                   to={`/character/${character.id}`}
@@ -84,7 +95,8 @@ export default function Home({ characters }: HomeProps) {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    p: 2,
+                    justifyContent: 'center',
+                    p: 3,
                     bgcolor: character.haveAgent ? customColors.periwinkle[500] : grey[700],
                     color: customColors.periwinkle[100],
                     borderRadius: 2,
@@ -94,8 +106,8 @@ export default function Home({ characters }: HomeProps) {
                       color: character.haveAgent ? customColors.periwinkle[500] : '#fff',
                       boxShadow: 4,
                     },
-                    minWidth: 200,
-                    minHeight: 120,
+                    width: 250,
+                    height: 150,
                     boxShadow: 2,
                     transition: 'background 0.2s, box-shadow 0.2s',
                   }}
